@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="el">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Εκπαιδευτική προσομοίωση: Μια έρευνα στο εργαστήριο."
+    >
+    <title>Μια έρευνα στο εργαστήριο</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css?v=23">
+    <script src="app.js?v=24" defer></script>
+  </head>
+  <body>
+    <main class="simulation" aria-label="Περιβάλλον εργαστηρίου">
+      <div class="simulation__stage simulation__stage--info-visible">
+        <img
+          class="simulation__background"
+          src="assets/lab-bench-base-16x9.png"
+          alt="Εργαστηριακός πάγκος με μικροσκόπιο και θωρακισμένο θάλαμο"
+          width="1920"
+          height="1080"
+        >
+
+        <div class="irradiation-controller" data-level="low">
+          <img
+            class="irradiation-controller__image"
+            src="assets/irradiation-controller-low.png"
+            alt="Χειριστήριο μηχανήματος ακτινοβόλησης σε ένταση Low"
+            width="1024"
+            height="1536"
+          >
+          <img
+            class="irradiation-controller__light"
+            src="assets/light_on.png"
+            alt=""
+            width="328"
+            height="319"
+            aria-hidden="true"
+          >
+          <button
+            class="irradiation-controller__switch"
+            type="button"
+            aria-label="Αλλαγή έντασης ακτινοβόλησης σε High"
+            aria-pressed="false"
+          ></button>
+          <button
+            class="irradiation-controller__power"
+            type="button"
+            aria-label="Ενεργοποίηση κόκκινου κουμπιού για 3 δευτερόλεπτα"
+            aria-pressed="false"
+          ></button>
+        </div>
+
+        <img
+          class="radiation-source-open"
+          src="assets/radiation-source-open-overlay.png"
+          alt=""
+          width="1920"
+          height="1080"
+          aria-hidden="true"
+        >
+
+        <img
+          class="radiation-source-irradiation"
+          src="assets/radiation-source-low-overlay.png?v=3"
+          data-level="low"
+          alt=""
+          width="1920"
+          height="1080"
+          aria-hidden="true"
+        >
+
+        <header class="page-heading">
+          <h1>Εικονικό Εργαστήριο</h1>
+          <p>Ακτινοβολία &amp; Βιολογικά Αποτελέσματα</p>
+        </header>
+
+        <button
+          class="scene-control fullscreen-toggle"
+          type="button"
+          aria-label="Πλήρης οθόνη"
+          aria-pressed="false"
+        >
+          <svg class="fullscreen-toggle__expand" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"></path>
+          </svg>
+          <svg class="fullscreen-toggle__compress" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"></path>
+          </svg>
+        </button>
+
+        <div class="drop-zone drop-zone--home" data-drop-zone="home" aria-hidden="true"></div>
+        <div class="drop-zone drop-zone--microscope" data-drop-zone="microscope" aria-hidden="true"></div>
+        <div class="drop-zone drop-zone--radiation" data-drop-zone="radiation" aria-hidden="true"></div>
+
+        <button
+          class="scene-control info-toggle"
+          type="button"
+          aria-label="Απόκρυψη πληροφοριών"
+          aria-pressed="true"
+          aria-controls="scene-labels"
+        >
+          <span aria-hidden="true">i</span>
+        </button>
+
+        <div id="scene-labels" class="scene-labels" aria-hidden="false">
+          <span class="scene-label scene-label--sample-a">
+            <span>Δείγμα Α</span>
+            <span class="scene-label__irradiation"></span>
+          </span>
+          <span class="scene-label scene-label--sample-b">
+            <span>Δείγμα Β</span>
+            <span class="scene-label__irradiation"></span>
+          </span>
+          <span class="scene-label scene-label--microscope">Μικροσκόπιο</span>
+          <span class="scene-label scene-label--radiation">Πηγή Ακτινοβολίας</span>
+        </div>
+
+        <button
+          class="hotspot hotspot--microscope"
+          type="button"
+          aria-label="Προβολή μέσα από το μικροσκόπιο"
+          aria-describedby="microscope-hint"
+        >
+          <span id="microscope-hint" class="hotspot__tooltip">
+            Κάνε κλικ για να δεις μέσα από το μικροσκόπιο.
+          </span>
+        </button>
+
+        <button
+          class="hotspot hotspot--radiation"
+          type="button"
+          aria-label="Άνοιγμα πόρτας πηγής ακτινοβολίας"
+          aria-describedby="radiation-hint"
+          aria-pressed="false"
+        >
+          <span id="radiation-hint" class="hotspot__tooltip">
+            Κάνε κλικ για να ανοίξεις την πόρτα.
+          </span>
+        </button>
+
+        <button class="sample sample--a" type="button" aria-label="Δείγμα Α">
+          <img src="assets/petri-dish-red-sample.png" alt="">
+        </button>
+
+        <button class="sample sample--b" type="button" aria-label="Δείγμα Β">
+          <img src="assets/petri-dish-red-sample.png" alt="">
+        </button>
+
+        <p id="drag-status" class="sr-only" aria-live="polite"></p>
+
+        <section
+          class="microscope-scene"
+          aria-label="Προβολή μέσα από το μικροσκόπιο"
+          aria-hidden="true"
+        >
+          <div
+            class="microscope-scene__cell-field"
+            role="img"
+            aria-label="Πληθυσμός φυσιολογικών ερυθρών αιμοσφαιρίων"
+            aria-hidden="true"
+          ></div>
+          <img
+            class="microscope-scene__empty"
+            src="assets/microscope-empty-dust.png"
+            alt="Κενό γκρι μικροσκοπικό πεδίο με λίγη σκόνη στα οπτικά"
+            width="1672"
+            height="941"
+          >
+          <img
+            class="microscope-scene__mask"
+            src="assets/mic_mask.png"
+            alt=""
+            width="1920"
+            height="1080"
+            aria-hidden="true"
+          >
+          <p class="microscope-scene__instruction">
+            Κάνε κλικ πάνω σε ένα κύτταρο για να δεις το DNA.
+          </p>
+          <button
+            class="microscope-scene__time-evolution"
+            type="button"
+            hidden
+          >
+            Εξέλιξη στον χρόνο
+          </button>
+          <div
+            class="time-passage"
+            role="status"
+            aria-label="Ο χρόνος περνά"
+            hidden
+          >
+            <span class="time-passage__clock" aria-hidden="true">
+              <span class="time-passage__hand time-passage__hand--hour"></span>
+              <span class="time-passage__hand time-passage__hand--minute"></span>
+              <span class="time-passage__hand time-passage__hand--second"></span>
+              <span class="time-passage__center"></span>
+            </span>
+            <span class="time-passage__text">Ο χρόνος περνά…</span>
+          </div>
+          <p
+            class="microscope-cell-tooltip"
+            role="tooltip"
+            aria-hidden="true"
+          ></p>
+          <button
+            class="microscope-scene__back"
+            type="button"
+            aria-label="Επιστροφή στο εργαστήριο"
+          >
+            <span aria-hidden="true">&#8592;</span>
+            <span>Επιστροφή</span>
+          </button>
+          <div
+            class="dna-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="dna-modal-title"
+            aria-hidden="true"
+            hidden
+          >
+            <div class="dna-modal__window">
+              <header class="dna-modal__header">
+                <h2 id="dna-modal-title" class="dna-modal__title"></h2>
+                <button
+                  class="dna-modal__close"
+                  type="button"
+                  aria-label="Κλείσιμο προβολής DNA"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </header>
+              <img
+                class="dna-modal__image"
+                src="assets/dna-normal.png"
+                alt=""
+                width="1536"
+                height="1024"
+              >
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>
