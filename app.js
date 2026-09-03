@@ -1,5 +1,6 @@
 const stage = document.querySelector(".simulation__stage");
 const infoToggle = document.querySelector(".info-toggle");
+const restartToggle = document.querySelector(".restart-toggle");
 const fullscreenToggle = document.querySelector(".fullscreen-toggle");
 const sceneLabels = document.querySelector(".scene-labels");
 const microscopeHotspot = document.querySelector(".hotspot--microscope");
@@ -319,13 +320,16 @@ function showMicroscopeCellTooltip(cell) {
     "microscope-cell--high-energy",
   );
   const cellState = cell.dataset.cellState || "normal";
+  const timeEvolutionIsComplete =
+    microscopeScene.dataset.evolution === "complete";
 
   if (cellState === "gray") {
     microscopeCellTooltip.textContent = "Κυτταρικός Θάνατος";
   } else if (cellState === "orange") {
     microscopeCellTooltip.textContent = "Μεταλλαγμένο Κύτταρο";
   } else {
-    microscopeCellTooltip.textContent = isIonizationEvent
+    microscopeCellTooltip.textContent =
+      isIonizationEvent && !timeEvolutionIsComplete
       ? "Καταγράφηκε Συμβάν Ιονισμού"
       : "Φυσιολογικό Κύτταρο";
   }
@@ -485,19 +489,13 @@ function startTimeEvolution() {
   // Κατοχυρώνει την αρχική κατάσταση πριν ξεκινήσουν τα πεντάδευτερα transitions.
   void microscopeCellField.offsetWidth;
 
-  affectedCells.forEach((cell) => {
-    cell.classList.remove("microscope-cell--high-energy");
-  });
   overlayPairs.forEach(({ overlay }) => {
     overlay.classList.add("is-visible");
   });
 
   const completionTimer = window.setTimeout(() => {
     affectedCells.forEach((cell) => {
-      cell.classList.remove(
-        "microscope-cell--high-energy",
-        "microscope-cell--time-transition",
-      );
+      cell.classList.remove("microscope-cell--time-transition");
       setMicroscopeCellVisualState(cell, cell.dataset.evolutionOutcome);
     });
     overlayPairs.forEach(({ overlay }) => overlay.remove());
@@ -619,12 +617,84 @@ function renderMicroscopeCellField(data) {
     setMicroscopeCellVisualState(cell, cellState);
     cell.classList.toggle(
       "microscope-cell--high-energy",
-      data.irradiationLevels.has("high") &&
-        data.timeEvolutionStatus === "idle" &&
-        isAffected,
+      data.irradiationLevels.has("high") && isAffected,
     );
   });
 }
+
+function resetApplication() {
+  if (irradiationLightTimer !== null) {
+    window.clearTimeout(irradiationLightTimer);
+    irradiationLightTimer = null;
+  }
+
+  sampleData.forEach((data) => {
+    data.timeEvolutionTimers.forEach((timer) => window.clearTimeout(timer));
+    data.irradiationLevels.clear();
+    data.viewedDnaStates.clear();
+    data.timeEvolutionStatus = "idle";
+    data.timeEvolutionTimers = [];
+  });
+
+  drag?.sample.classList.remove("is-dragging");
+  drag?.sample.setAttribute("aria-grabbed", "false");
+  drag = null;
+  hideDropZones();
+  hideMicroscopeCellTooltip();
+
+  irradiationController.classList.remove("irradiation-controller--active");
+  irradiationController.dataset.level = "low";
+  irradiationControllerImage.src = irradiationControllerImages.low;
+  irradiationControllerImage.alt =
+    "Χειριστήριο μηχανήματος ακτινοβόλησης σε ένταση Low";
+  irradiationControllerSwitch.setAttribute("aria-pressed", "false");
+  irradiationControllerSwitch.setAttribute(
+    "aria-label",
+    "Αλλαγή έντασης ακτινοβόλησης σε High",
+  );
+  irradiationControllerPower.setAttribute("aria-pressed", "false");
+  radiationSourceIrradiation.src = irradiationEffectImages.low;
+  radiationSourceIrradiation.dataset.level = "low";
+
+  stage.classList.remove(
+    "simulation__stage--door-open",
+    "simulation__stage--irradiating",
+    "simulation__stage--microscope-view",
+  );
+  stage.classList.add("simulation__stage--info-visible");
+  radiationHotspot.disabled = false;
+  radiationHotspot.setAttribute("aria-disabled", "false");
+  radiationHotspot.setAttribute("aria-pressed", "false");
+  radiationHotspot.setAttribute(
+    "aria-label",
+    "Άνοιγμα πόρτας πηγής ακτινοβολίας",
+  );
+  radiationHint.textContent = "Κάνε κλικ για να ανοίξεις την πόρτα.";
+  infoToggle.setAttribute("aria-pressed", "true");
+  infoToggle.setAttribute("aria-label", "Απόκρυψη πληροφοριών");
+  sceneLabels.setAttribute("aria-hidden", "false");
+
+  dnaModal.hidden = true;
+  dnaModal.setAttribute("aria-hidden", "true");
+  microscopeBack.disabled = false;
+  microscopeScene.setAttribute("aria-hidden", "true");
+
+  samples.forEach((sample) => {
+    sample.classList.remove("is-dragging");
+    sample.setAttribute("aria-grabbed", "false");
+    sample.dataset.irradiation = "none";
+    setSamplePosition(sample, "home");
+    updateSampleIrradiationLabel(sample);
+  });
+
+  renderedMicroscopeSampleId = null;
+  microscopeCellField.replaceChildren();
+  updateMicroscopeSpecimen();
+  dragStatus.textContent = "Η εφαρμογή επανεκκινήθηκε.";
+  restartToggle.focus();
+}
+
+restartToggle.addEventListener("click", resetApplication);
 
 function updateFullscreenButton() {
   const isFullscreen = Boolean(document.fullscreenElement);

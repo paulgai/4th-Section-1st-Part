@@ -320,10 +320,15 @@ body {
   font-weight: 700;
 }
 
+.restart-toggle {
+  left: 1.5%;
+}
+
 .fullscreen-toggle {
   right: calc(1.5% + clamp(26px, 3.4vw, 44px) + clamp(6px, 0.7vw, 10px));
 }
 
+.restart-toggle svg,
 .fullscreen-toggle svg {
   width: 55%;
   height: 55%;
